@@ -58,16 +58,31 @@ def authenticate_user(username, password):
 def upload_report(auth, files):
     try:
         headers = {'accept': 'application/json'}
-        files_data = [('files', (file.name, file.getvalue(), file.type)) for file in files]
+        files_data = [
+            ('files', (file.name, file.getvalue(), file.type))
+            for file in files
+        ]
+
         response = requests.post(
             f"{API_URL}/reports/upload",
             auth=auth,
             files=files_data,
             headers=headers
         )
-        return response.status_code, response.json()
+
+        # ✅ SAFE JSON handling
+        try:
+            data = response.json()
+        except ValueError:
+            data = {
+                "detail": response.text or "Server returned no JSON response"
+            }
+
+        return response.status_code, data
+
     except requests.exceptions.ConnectionError:
         return 503, {"detail": "Server is unavailable. Please try again later."}
+
     
 #  4. Diagnosis  Function
 def get_diagnosis(auth, doc_id, question):
@@ -81,7 +96,15 @@ def get_diagnosis(auth, doc_id, question):
             auth=auth,
             data=data
         )
-        return response.status_code, response.json()
+        # ✅ SAFE JSON handling (backend may return plain text on errors)
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = {
+                "detail": response.text or "Server returned no JSON response",
+                "status_code": response.status_code,
+            }
+        return response.status_code, payload
     except requests.exceptions.ConnectionError:
         return 503, {"detail": "Server is unavailable. Please try again later."}
     
@@ -93,7 +116,15 @@ def get_doctor_diagnosis(auth, patient_name):
             auth=auth,
             params={'patient_name': patient_name}
         )
-        return response.status_code, response.json()
+        # ✅ SAFE JSON handling
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = {
+                "detail": response.text or "Server returned no JSON response",
+                "status_code": response.status_code,
+            }
+        return response.status_code, payload
     except requests.exceptions.ConnectionError:
         return 503, {"detail": "Server is unavailable. Please try again later."}
     
@@ -147,7 +178,7 @@ else:
 
 # Main Page Application
 
-st.title("👨‍⚕️ GenAI-Powered Medical Diagnosis")
+st.title("👨‍⚕️ MedScope AI")
 st.markdown("This application uses a FastAPI backend with a LangChain/GenAI stack to help patients get a diagnosis from their reports and allow doctors to access their patients' diagnosis history.")
 
 if not st.session_state.logged_in:

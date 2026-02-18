@@ -12,14 +12,19 @@ PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "rbac-diagnosis-index")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "768"))
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 pc=Pinecone(api_key=PINECONE_API_KEY)
 index=pc.Index(PINECONE_INDEX_NAME)
 
-embed_model=GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-llm=ChatGroq(temperature=0,model_name="llama3-8b-8192",groq_api_key=GROQ_API_KEY)
+embed_model=GoogleGenerativeAIEmbeddings(
+    model="models/gemini-embedding-001",
+    output_dimensionality=EMBEDDING_DIM,
+)
+llm=ChatGroq(temperature=0,model_name=GROQ_MODEL,groq_api_key=GROQ_API_KEY)
 
 prompt=PromptTemplate.from_template(
     """
@@ -58,7 +63,7 @@ async def diagnosis_report(user:str,doc_id:str,question:str):
         return {"diagnosis":None,"explanation":"No report contentindexed for this doc_id"}
     
     # limit context length
-    context_text="/n/n".join(contexts[:5])
+    context_text="\n\n".join(contexts[:5])
 
     # final call the rag chain
     final=await asyncio.to_thread(rag_chain.invoke,{"context":context_text,"question":question})

@@ -3,6 +3,9 @@ from ..auth.route import authenticate
 from .query import diagnosis_report
 from ..config.db import reports_collection, diagnosis_collection
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 router=APIRouter(prefix="/diagnosis",tags=["diagnosis"])
 
@@ -18,7 +21,16 @@ async def diagnos(user=Depends(authenticate),doc_id:str=Form(...),question:str=F
     
     # if user is a patient and want diagnosis from his own report
     if user["role"]=="patient":
-        res=await diagnosis_report(user["username"],doc_id,question)
+        try:
+            res=await diagnosis_report(user["username"],doc_id,question)
+        except Exception as e:
+            # Make sure client always gets JSON error instead of crashing response.json()
+            msg = str(e)
+            logger.error(f"Diagnosis generation failed: {msg}", exc_info=True)
+            raise HTTPException(
+                status_code=502,
+                detail=f"Diagnosis generation failed. If this mentions 'model decommissioned', set GROQ_MODEL in .env. Error: {msg}",
+            )
         # persist the diagnosis report
         diagnosis_collection.insert_one({
             "doc_id": doc_id,
