@@ -38,28 +38,6 @@ The system uses **FastAPI, Streamlit, LangChain, Google Gemini embeddings, Pinec
 
 ---
 
-## 🏗️ Architecture Overview
-
-MedicalReportDiagnosis/
-│
-├── server/
-│ ├── main.py # FastAPI entry point
-│ ├── routes/ # API routes
-│ ├── services/ # AI & business logic
-│ ├── database/ # MongoDB connection
-│ └── utils/ # Helpers
-│
-├── client/
-│ └── app.py # Streamlit frontend
-│
-├── .env # Environment variables
-├── requirements.txt # Python dependencies
-├── README.md # Project documentation
-└── .gitignore
-
-
----
-
 ## ⚙️ Environment Variables
 
 Create a `.env` file in the root directory:
@@ -170,14 +148,5 @@ This project is licensed under the MIT License.
 
 ⭐ If you like this project, don’t forget to star the repository!
 
-
----
-
-If you want, I can also:
-- 🔥 Make a **shorter README for recruiters**
-- 🎯 Customize it for **IBM / internship submission**
-- 🎨 Add **badges (Python, FastAPI, MongoDB, AI)**
-
-Just tell me 😄
 
 
